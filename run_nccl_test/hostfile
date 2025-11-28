@@ -1,0 +1,9 @@
+# MPI Hostfile - 本地双容器配置
+# 容器1: yijun_testbed01 (本地容器)
+# 容器2: yijun_testbed23 (本地容器)
+# 每容器 GPU: 2 块
+# 每容器进程: 2 个 (每个 GPU 运行 1 个进程)
+# 总进程数: 4 (2容器 × 2进程)
+
+localhost slots=2
+testbed23 slots=2

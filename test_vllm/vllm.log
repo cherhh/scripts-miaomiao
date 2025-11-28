@@ -1,0 +1,313 @@
+yijun@gpu11:~/docker/testbed$ script/test_vllm/run_ray_vllm_from_host.sh
+==========================================
+Ray + vLLM 集群启动脚本（从宿主机运行）
+==========================================
+容器配置:
+  容器1 (HEAD): yijun_testbed01
+  容器2 (WORKER): yijun_testbed23
+
+vLLM 配置:
+  模型名称: facebook/opt-6.7b
+  模型目录: /usr/data
+  服务端口: 2345
+  Tensor parallel: 4
+  Pipeline parallel: 1
+==========================================
+
+>>> 检查容器状态...
+✓ 容器运行正常
+
+>>> 获取容器 IP 地址...
+  容器1 IP: 10.0.11.200
+  容器2 IP: 10.2.11.200
+
+>>> 清理已存在的 Ray 进程...
+2025-11-17 22:10:05,702 INFO scripts.py:1392 -- Did not find any active Ray processes.
+2025-11-17 22:10:06,405 INFO scripts.py:1392 -- Did not find any active Ray processes.
+✓ Ray 进程清理完成
+
+>>> 启动 Ray HEAD 节点 (容器 yijun_testbed01)...
+  等待 Ray HEAD 节点启动...
+  Ray HEAD 节点正在初始化...
+
+>>> 启动 Ray WORKER 节点 (容器 yijun_testbed23)...
+  等待 Ray WORKER 节点加入集群...
+✓ Ray WORKER 节点启动成功
+
+>>> 等待 4 个 GPU 可用...
+✓ GPU 检查通过。发现 4 个 GPU
+
+>>> Ray 集群状态:
+======== Autoscaler status: 2025-11-17 22:10:24.794986 ========
+Node status
+---------------------------------------------------------------
+Active:
+ 1 node_a26c4e6a17dc1803afc658f17463a21d2bae66cc4dfabceb7864ed31
+ 1 node_196e202489e0c89dd2dcef17b6e53860623deb82224f2dfdcdbc3d8d
+Pending:
+ (no pending nodes)
+Recent failures:
+ (no failures)
+
+Resources
+---------------------------------------------------------------
+Total Usage:
+ 0.0/160.0 CPU
+ 0.0/4.0 GPU
+ 0B/378.69GiB memory
+ 0B/121.60GiB object_store_memory
+
+Total Constraints:
+ (no request_resources() constraints)
+Total Demands:
+ (no resource demands)
+
+==========================================
+>>> 启动 vLLM 服务...
+==========================================
+命令: vllm serve facebook/opt-6.7b
+  --trust-remote-code
+  --port 2345
+  --tensor-parallel-size 4
+  --pipeline-parallel-size 1
+
+注意: vLLM 服务将在容器 yijun_testbed01 中运行
+      模型将从 /usr/data 目录加载（确保已挂载 /mnt/nfs/yijun:/usr/data）
+      服务地址: http://10.0.11.200:2345
+
+按 Ctrl+C 停止服务
+==========================================
+
+INFO 11-17 22:10:29 [__init__.py:244] Automatically detected platform cuda.
+INFO 11-17 22:10:32 [api_server.py:1395] vLLM API server version 0.9.2
+INFO 11-17 22:10:32 [cli_args.py:325] non-default args: {'port': 2345, 'model': 'facebook/opt-6.7b', 'trust_remote_code': True, 'tensor_parallel_size': 4}
+INFO 11-17 22:10:38 [config.py:841] This model supports multiple tasks: {'generate', 'classify', 'reward', 'embed'}. Defaulting to 'generate'.
+INFO 11-17 22:10:38 [config.py:1472] Using max model len 2048
+INFO 11-17 22:10:39 [config.py:2285] Chunked prefill is enabled with max_num_batched_tokens=2048.
+INFO 11-17 22:10:43 [__init__.py:244] Automatically detected platform cuda.
+INFO 11-17 22:10:45 [core.py:526] Waiting for init message from front-end.
+INFO 11-17 22:10:45 [core.py:69] Initializing a V1 LLM engine (v0.9.2) with config: model='facebook/opt-6.7b', speculative_config=None, tokenizer='facebook/opt-6.7b', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config={}, tokenizer_revision=None, trust_remote_code=True, dtype=torch.float16, max_seq_len=2048, download_dir=None, load_format=LoadFormat.AUTO, tensor_parallel_size=4, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, kv_cache_dtype=auto,  device_config=cuda, decoding_config=DecodingConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_backend=''), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None), seed=0, served_model_name=facebook/opt-6.7b, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=True, chunked_prefill_enabled=True, use_async_output_proc=True, pooler_config=None, compilation_config={"level":3,"debug_dump_path":"","cache_dir":"","backend":"","custom_ops":[],"splitting_ops":["vllm.unified_attention","vllm.unified_attention_with_output"],"use_inductor":true,"compile_sizes":[],"inductor_compile_config":{"enable_auto_functionalized_v2":false},"inductor_passes":{},"use_cudagraph":true,"cudagraph_num_of_warmups":1,"cudagraph_capture_sizes":[512,504,496,488,480,472,464,456,448,440,432,424,416,408,400,392,384,376,368,360,352,344,336,328,320,312,304,296,288,280,272,264,256,248,240,232,224,216,208,200,192,184,176,168,160,152,144,136,128,120,112,104,96,88,80,72,64,56,48,40,32,24,16,8,4,2,1],"cudagraph_copy_inputs":false,"full_cuda_graph":false,"max_capture_size":512,"local_cache_dir":null}
+2025-11-17 22:10:45,892 INFO worker.py:1588 -- Using address 10.0.11.200:6379 set in the environment variable RAY_ADDRESS
+2025-11-17 22:10:45,894 INFO worker.py:1723 -- Connecting to existing Ray cluster at address: 10.0.11.200:6379...
+2025-11-17 22:10:45,911 INFO worker.py:1917 -- Connected to Ray cluster.
+INFO 11-17 22:10:47 [ray_utils.py:334] No current placement group found. Creating a new placement group.
+WARNING 11-17 22:10:47 [ray_utils.py:198] tensor_parallel_size=4 is bigger than a reserved number of GPUs (2 GPUs) in a node a26c4e6a17dc1803afc658f17463a21d2bae66cc4dfabceb7864ed31. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 4 GPUs available at each node.
+WARNING 11-17 22:10:47 [ray_utils.py:198] tensor_parallel_size=4 is bigger than a reserved number of GPUs (2 GPUs) in a node 196e202489e0c89dd2dcef17b6e53860623deb82224f2dfdcdbc3d8d. Tensor parallel workers can be spread out to 2+ nodes which can degrade the performance unless you have fast interconnect across nodes, like Infiniband. To resolve this issue, make sure you have more than 4 GPUs available at each node.
+INFO 11-17 22:10:47 [ray_distributed_executor.py:177] use_ray_spmd_worker: True
+(pid=19028) INFO 11-17 22:10:51 [__init__.py:244] Automatically detected platform cuda.
+INFO 11-17 22:10:52 [ray_distributed_executor.py:353] non_carry_over_env_vars from config: set()
+INFO 11-17 22:10:52 [ray_distributed_executor.py:355] Copying the following environment variables to workers: ['LD_LIBRARY_PATH', 'VLLM_USAGE_SOURCE', 'VLLM_USE_RAY_SPMD_WORKER', 'VLLM_USE_RAY_COMPILED_DAG', 'VLLM_WORKER_MULTIPROC_METHOD', 'VLLM_USE_V1']
+INFO 11-17 22:10:52 [ray_distributed_executor.py:358] If certain env vars should NOT be copied to workers, add them to /root/.config/vllm/ray_non_carry_over_env_vars.json file
+(RayWorkerWrapper pid=19028) INFO 11-17 22:10:56 [__init__.py:1152] Found nccl from library libnccl.so.2
+(RayWorkerWrapper pid=19028) INFO 11-17 22:10:56 [pynccl.py:70] vLLM is using nccl==2.26.2
+(pid=2160, ip=10.2.11.200) INFO 11-17 22:10:52 [__init__.py:244] Automatically detected platform cuda. [repeated 3x across cluster] (Ray deduplicates logs by default. Set RAY_DEDUP_LOGS=0 to disable log deduplication, or see https://docs.ray.io/en/master/ray-observability/user-guides/configure-logging.html#log-deduplication for more options.)
+(RayWorkerWrapper pid=19028) WARNING 11-17 22:10:58 [custom_all_reduce.py:85] Custom allreduce is disabled because this process group spans across nodes.
+(RayWorkerWrapper pid=19028) INFO 11-17 22:10:58 [shm_broadcast.py:289] vLLM message queue communication handle: Handle(local_reader_ranks=[1], buffer_handle=(1, 4194304, 6, 'psm_16b59254'), local_subscribe_addr='ipc:///tmp/dcb01757-0b31-47af-bd23-04c3b5fa1e7c', remote_subscribe_addr='tcp://10.0.11.200:35573', remote_addr_ipv6=False)
+(RayWorkerWrapper pid=2159, ip=10.2.11.200) INFO 11-17 22:10:58 [parallel_state.py:1076] rank 2 in world size 4 is assigned as DP rank 0, PP rank 0, TP rank 2, EP rank 2
+(RayWorkerWrapper pid=2159, ip=10.2.11.200) INFO 11-17 22:10:58 [topk_topp_sampler.py:49] Using FlashInfer for top-p & top-k sampling.
+(RayWorkerWrapper pid=2159, ip=10.2.11.200) INFO 11-17 22:10:58 [gpu_model_runner.py:1770] Starting to load model facebook/opt-6.7b...
+(RayWorkerWrapper pid=2159, ip=10.2.11.200) INFO 11-17 22:10:58 [gpu_model_runner.py:1775] Loading model from scratch...
+(RayWorkerWrapper pid=2159, ip=10.2.11.200) INFO 11-17 22:10:58 [cuda.py:284] Using Flash Attention backend on V1 engine.
+(RayWorkerWrapper pid=19028) INFO 11-17 22:10:59 [weight_utils.py:292] Using model weights format ['*.bin']
+(raylet, ip=10.2.11.200) [2025-11-17 22:13:42,906 E 1964 2000] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 45.7432 GB; capacity: 915.815 GB. Object creation will fail if spilling is required.
+(raylet) [2025-11-17 22:13:52,898 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 37.2431 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:14:02,910 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 37.139 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet, ip=10.2.11.200) [2025-11-17 22:14:12,944 E 1964 2000] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 35.9546 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:14:22,929 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 34.6854 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet, ip=10.2.11.200) [2025-11-17 22:14:32,967 E 1964 2000] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 34.201 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:14:42,949 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 32.3109 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(RayWorkerWrapper pid=19028) INFO 11-17 22:14:51 [weight_utils.py:308] Time spent downloading weights for facebook/opt-6.7b: 232.743790 seconds
+(RayWorkerWrapper pid=2160, ip=10.2.11.200) INFO 11-17 22:10:56 [__init__.py:1152] Found nccl from library libnccl.so.2 [repeated 3x across cluster]
+(RayWorkerWrapper pid=2160, ip=10.2.11.200) INFO 11-17 22:10:56 [pynccl.py:70] vLLM is using nccl==2.26.2 [repeated 3x across cluster]
+(RayWorkerWrapper pid=2160, ip=10.2.11.200) WARNING 11-17 22:10:58 [custom_all_reduce.py:85] Custom allreduce is disabled because this process group spans across nodes. [repeated 3x across cluster]
+(RayWorkerWrapper pid=19026) INFO 11-17 22:10:58 [parallel_state.py:1076] rank 1 in world size 4 is assigned as DP rank 0, PP rank 0, TP rank 1, EP rank 1 [repeated 3x across cluster]
+(RayWorkerWrapper pid=19026) INFO 11-17 22:10:58 [topk_topp_sampler.py:49] Using FlashInfer for top-p & top-k sampling. [repeated 3x across cluster]
+(RayWorkerWrapper pid=19026) INFO 11-17 22:10:58 [gpu_model_runner.py:1770] Starting to load model facebook/opt-6.7b... [repeated 3x across cluster]
+(RayWorkerWrapper pid=19026) INFO 11-17 22:10:58 [gpu_model_runner.py:1775] Loading model from scratch... [repeated 3x across cluster]
+(RayWorkerWrapper pid=19026) INFO 11-17 22:10:58 [cuda.py:284] Using Flash Attention backend on V1 engine. [repeated 3x across cluster]
+(RayWorkerWrapper pid=2160, ip=10.2.11.200) INFO 11-17 22:10:59 [weight_utils.py:292] Using model weights format ['*.bin'] [repeated 3x across cluster]
+Loading pt checkpoint shards:   0% Completed | 0/2 [00:00<?, ?it/s]
+(raylet, ip=10.2.11.200) [2025-11-17 22:14:42,979 E 1964 2000] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 32.2893 GB; capacity: 915.815 GB. Object creation will fail if spilling is required.
+(raylet, ip=10.2.11.200) [2025-11-17 22:14:52,994 E 1964 2000] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5598 GB; capacity: 915.815 GB. Object creation will fail if spilling is required.
+Loading pt checkpoint shards:  50% Completed | 1/2 [00:07<00:07,  7.34s/it]
+(raylet) [2025-11-17 22:14:52,962 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5598 GB; capacity: 915.815 GB. Object creation will fail if spilling is required.
+(RayWorkerWrapper pid=19028) INFO 11-17 22:15:01 [default_loader.py:272] Loading weights took 10.12 seconds
+(RayWorkerWrapper pid=2160, ip=10.2.11.200) INFO 11-17 22:14:52 [weight_utils.py:308] Time spent downloading weights for facebook/opt-6.7b: 232.877283 seconds
+Loading pt checkpoint shards: 100% Completed | 2/2 [00:10<00:00,  4.66s/it]
+Loading pt checkpoint shards: 100% Completed | 2/2 [00:10<00:00,  5.06s/it]
+(RayWorkerWrapper pid=19028) 
+(RayWorkerWrapper pid=19028) INFO 11-17 22:15:02 [gpu_model_runner.py:1801] Model loading took 3.1136 GiB and 243.491965 seconds
+(raylet) [2025-11-17 22:15:02,978 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5598 GB; capacity: 915.815 GB. Object creation will fail if spilling is required.
+(raylet) [2025-11-17 22:15:12,993 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5579 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(RayWorkerWrapper pid=2159, ip=10.2.11.200) INFO 11-17 22:15:18 [backends.py:508] Using cache directory: /root/.cache/vllm/torch_compile_cache/3565c95f2d/rank_2_0/backbone for vLLM's torch.compile
+(RayWorkerWrapper pid=2159, ip=10.2.11.200) INFO 11-17 22:15:18 [backends.py:519] Dynamo bytecode transform time: 12.30 s
+(RayWorkerWrapper pid=19026) INFO 11-17 22:15:05 [default_loader.py:272] Loading weights took 13.31 seconds [repeated 3x across cluster]
+(RayWorkerWrapper pid=19026) INFO 11-17 22:15:06 [gpu_model_runner.py:1801] Model loading took 3.1136 GiB and 246.884561 seconds [repeated 3x across cluster]
+(RayWorkerWrapper pid=19028) INFO 11-17 22:15:21 [backends.py:181] Cache the graph of shape None for later use
+(raylet) [2025-11-17 22:15:23,005 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5504 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:15:33,017 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5457 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(RayWorkerWrapper pid=2159, ip=10.2.11.200) INFO 11-17 22:15:35 [backends.py:193] Compiling a graph for general shape takes 16.94 s
+(RayWorkerWrapper pid=19026) INFO 11-17 22:15:18 [backends.py:508] Using cache directory: /root/.cache/vllm/torch_compile_cache/3565c95f2d/rank_1_0/backbone for vLLM's torch.compile [repeated 3x across cluster]
+(RayWorkerWrapper pid=19026) INFO 11-17 22:15:18 [backends.py:519] Dynamo bytecode transform time: 12.29 s [repeated 3x across cluster]
+(RayWorkerWrapper pid=19026) INFO 11-17 22:15:21 [backends.py:181] Cache the graph of shape None for later use [repeated 3x across cluster]
+(raylet) [2025-11-17 22:15:43,029 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.54 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(RayWorkerWrapper pid=19028) INFO 11-17 22:15:48 [monitor.py:34] torch.compile takes 30.26 s in total
+(RayWorkerWrapper pid=19028) INFO 11-17 22:15:37 [backends.py:193] Compiling a graph for general shape takes 17.99 s [repeated 3x across cluster]
+(RayWorkerWrapper pid=2160, ip=10.2.11.200) /usr/local/lib/python3.12/dist-packages/torch/utils/cpp_extension.py:2356: UserWarning: TORCH_CUDA_ARCH_LIST is not set, all archs for visible cards are included for compilation. 
+(RayWorkerWrapper pid=2160, ip=10.2.11.200) If this is not desired, please set os.environ['TORCH_CUDA_ARCH_LIST'].
+(RayWorkerWrapper pid=2160, ip=10.2.11.200)   warnings.warn(
+(raylet, ip=10.2.11.200) [2025-11-17 22:15:43,070 E 1964 2000] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.54 GB; capacity: 915.815 GB. Object creation will fail if spilling is required.
+(RayWorkerWrapper pid=2159, ip=10.2.11.200) INFO 11-17 22:15:50 [gpu_worker.py:232] Available KV cache memory: 17.70 GiB
+INFO 11-17 22:15:50 [kv_cache_utils.py:716] GPU KV cache size: 144,960 tokens
+INFO 11-17 22:15:50 [kv_cache_utils.py:720] Maximum concurrency for 2,048 tokens per request: 70.78x
+INFO 11-17 22:15:50 [kv_cache_utils.py:716] GPU KV cache size: 144,960 tokens
+INFO 11-17 22:15:50 [kv_cache_utils.py:720] Maximum concurrency for 2,048 tokens per request: 70.78x
+INFO 11-17 22:15:50 [kv_cache_utils.py:716] GPU KV cache size: 144,960 tokens
+INFO 11-17 22:15:50 [kv_cache_utils.py:720] Maximum concurrency for 2,048 tokens per request: 70.78x
+INFO 11-17 22:15:50 [kv_cache_utils.py:716] GPU KV cache size: 144,960 tokens
+INFO 11-17 22:15:50 [kv_cache_utils.py:720] Maximum concurrency for 2,048 tokens per request: 70.78x
+Capturing CUDA graph shapes:   0%|          | 0/67 [00:00<?, ?it/s]
+Capturing CUDA graph shapes:   1%|▏         | 1/67 [00:00<00:33,  1.99it/s]
+Capturing CUDA graph shapes:   3%|▎         | 2/67 [00:01<00:35,  1.82it/s]
+Capturing CUDA graph shapes:   4%|▍         | 3/67 [00:01<00:38,  1.65it/s]
+(raylet, ip=10.2.11.200) [2025-11-17 22:15:53,085 E 1964 2000] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5395 GB; capacity: 915.815 GB. Object creation will fail if spilling is required.
+Capturing CUDA graph shapes:   6%|▌         | 4/67 [00:02<00:37,  1.68it/s]
+Capturing CUDA graph shapes:   7%|▋         | 5/67 [00:02<00:36,  1.68it/s]
+Capturing CUDA graph shapes:   9%|▉         | 6/67 [00:03<00:35,  1.71it/s]
+(RayWorkerWrapper pid=19028) /usr/local/lib/python3.12/dist-packages/torch/utils/cpp_extension.py:2356: UserWarning: TORCH_CUDA_ARCH_LIST is not set, all archs for visible cards are included for compilation.  [repeated 3x across cluster]
+(RayWorkerWrapper pid=19028) If this is not desired, please set os.environ['TORCH_CUDA_ARCH_LIST']. [repeated 3x across cluster]
+(RayWorkerWrapper pid=19028)   warnings.warn( [repeated 3x across cluster]
+Capturing CUDA graph shapes:  10%|█         | 7/67 [00:04<00:35,  1.70it/s]
+Capturing CUDA graph shapes:  12%|█▏        | 8/67 [00:04<00:34,  1.72it/s]
+Capturing CUDA graph shapes:  13%|█▎        | 9/67 [00:05<00:33,  1.74it/s]
+Capturing CUDA graph shapes:  15%|█▍        | 10/67 [00:05<00:32,  1.74it/s]
+Capturing CUDA graph shapes:  16%|█▋        | 11/67 [00:06<00:32,  1.73it/s]
+Capturing CUDA graph shapes:  18%|█▊        | 12/67 [00:06<00:31,  1.74it/s]
+Capturing CUDA graph shapes:  19%|█▉        | 13/67 [00:07<00:30,  1.75it/s]
+(raylet) [2025-11-17 22:15:53,042 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5395 GB; capacity: 915.815 GB. Object creation will fail if spilling is required.
+Capturing CUDA graph shapes:  21%|██        | 14/67 [00:08<00:30,  1.74it/s]
+Capturing CUDA graph shapes:  22%|██▏       | 15/67 [00:08<00:30,  1.71it/s]
+Capturing CUDA graph shapes:  24%|██▍       | 16/67 [00:09<00:29,  1.74it/s]
+Capturing CUDA graph shapes:  25%|██▌       | 17/67 [00:09<00:28,  1.74it/s]
+Capturing CUDA graph shapes:  27%|██▋       | 18/67 [00:10<00:27,  1.76it/s]
+Capturing CUDA graph shapes:  28%|██▊       | 19/67 [00:10<00:26,  1.78it/s]
+Capturing CUDA graph shapes:  30%|██▉       | 20/67 [00:11<00:26,  1.78it/s]
+Capturing CUDA graph shapes:  31%|███▏      | 21/67 [00:12<00:25,  1.77it/s]
+(raylet, ip=10.2.11.200) [2025-11-17 22:16:03,101 E 1964 2000] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5395 GB; capacity: 915.815 GB. Object creation will fail if spilling is required.
+Capturing CUDA graph shapes:  33%|███▎      | 22/67 [00:12<00:25,  1.75it/s]
+Capturing CUDA graph shapes:  34%|███▍      | 23/67 [00:13<00:24,  1.76it/s]
+Capturing CUDA graph shapes:  36%|███▌      | 24/67 [00:13<00:24,  1.78it/s]
+Capturing CUDA graph shapes:  37%|███▋      | 25/67 [00:14<00:23,  1.79it/s]
+Capturing CUDA graph shapes:  39%|███▉      | 26/67 [00:14<00:22,  1.79it/s]
+Capturing CUDA graph shapes:  40%|████      | 27/67 [00:15<00:22,  1.75it/s]
+Capturing CUDA graph shapes:  42%|████▏     | 28/67 [00:16<00:21,  1.77it/s]
+Capturing CUDA graph shapes:  43%|████▎     | 29/67 [00:16<00:21,  1.75it/s]
+Capturing CUDA graph shapes:  45%|████▍     | 30/67 [00:17<00:20,  1.78it/s]
+Capturing CUDA graph shapes:  46%|████▋     | 31/67 [00:17<00:20,  1.80it/s]
+(raylet) [2025-11-17 22:16:03,056 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5395 GB; capacity: 915.815 GB. Object creation will fail if spilling is required.
+Capturing CUDA graph shapes:  48%|████▊     | 32/67 [00:18<00:19,  1.78it/s]
+Capturing CUDA graph shapes:  49%|████▉     | 33/67 [00:18<00:19,  1.76it/s]
+Capturing CUDA graph shapes:  51%|█████     | 34/67 [00:19<00:18,  1.76it/s]
+Capturing CUDA graph shapes:  52%|█████▏    | 35/67 [00:19<00:17,  1.81it/s]
+Capturing CUDA graph shapes:  54%|█████▎    | 36/67 [00:20<00:16,  1.83it/s]
+Capturing CUDA graph shapes:  55%|█████▌    | 37/67 [00:20<00:16,  1.85it/s]
+Capturing CUDA graph shapes:  57%|█████▋    | 38/67 [00:21<00:15,  1.86it/s]
+Capturing CUDA graph shapes:  58%|█████▊    | 39/67 [00:22<00:15,  1.85it/s]
+(raylet) [2025-11-17 22:16:13,069 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5394 GB; capacity: 915.815 GB. Object creation will fail if spilling is required.
+Capturing CUDA graph shapes:  60%|█████▉    | 40/67 [00:22<00:14,  1.88it/s]
+Capturing CUDA graph shapes:  61%|██████    | 41/67 [00:23<00:13,  1.88it/s]
+Capturing CUDA graph shapes:  63%|██████▎   | 42/67 [00:23<00:13,  1.90it/s]
+Capturing CUDA graph shapes:  64%|██████▍   | 43/67 [00:24<00:12,  1.89it/s]
+Capturing CUDA graph shapes:  66%|██████▌   | 44/67 [00:24<00:12,  1.91it/s]
+Capturing CUDA graph shapes:  67%|██████▋   | 45/67 [00:25<00:11,  1.91it/s]
+Capturing CUDA graph shapes:  69%|██████▊   | 46/67 [00:25<00:10,  1.92it/s]
+Capturing CUDA graph shapes:  70%|███████   | 47/67 [00:26<00:10,  1.92it/s]
+Capturing CUDA graph shapes:  72%|███████▏  | 48/67 [00:26<00:09,  1.92it/s]
+Capturing CUDA graph shapes:  73%|███████▎  | 49/67 [00:27<00:09,  1.92it/s]
+(raylet, ip=10.2.11.200) [2025-11-17 22:16:13,118 E 1964 2000] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5394 GB; capacity: 915.815 GB. Object creation will fail if spilling is required.
+Capturing CUDA graph shapes:  75%|███████▍  | 50/67 [00:27<00:09,  1.87it/s]
+Capturing CUDA graph shapes:  76%|███████▌  | 51/67 [00:28<00:08,  1.84it/s]
+Capturing CUDA graph shapes:  78%|███████▊  | 52/67 [00:28<00:08,  1.86it/s]
+Capturing CUDA graph shapes:  79%|███████▉  | 53/67 [00:29<00:07,  1.88it/s]
+Capturing CUDA graph shapes:  81%|████████  | 54/67 [00:29<00:06,  1.91it/s]
+Capturing CUDA graph shapes:  82%|████████▏ | 55/67 [00:30<00:06,  1.91it/s]
+Capturing CUDA graph shapes:  84%|████████▎ | 56/67 [00:30<00:05,  1.93it/s]
+Capturing CUDA graph shapes:  85%|████████▌ | 57/67 [00:31<00:05,  1.95it/s]
+Capturing CUDA graph shapes:  87%|████████▋ | 58/67 [00:31<00:04,  1.95it/s]
+(raylet) [2025-11-17 22:16:23,083 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5394 GB; capacity: 915.815 GB. Object creation will fail if spilling is required.
+Capturing CUDA graph shapes:  88%|████████▊ | 59/67 [00:32<00:04,  1.96it/s]
+Capturing CUDA graph shapes:  90%|████████▉ | 60/67 [00:32<00:03,  1.97it/s]
+Capturing CUDA graph shapes:  91%|█████████ | 61/67 [00:33<00:03,  1.96it/s]
+Capturing CUDA graph shapes:  93%|█████████▎| 62/67 [00:34<00:02,  1.88it/s]
+Capturing CUDA graph shapes:  94%|█████████▍| 63/67 [00:34<00:02,  1.92it/s]
+Capturing CUDA graph shapes:  96%|█████████▌| 64/67 [00:35<00:01,  1.96it/s]
+Capturing CUDA graph shapes:  97%|█████████▋| 65/67 [00:35<00:01,  1.95it/s]
+Capturing CUDA graph shapes:  99%|█████████▊| 66/67 [00:36<00:00,  1.90it/s]
+(RayWorkerWrapper pid=19028) INFO 11-17 22:16:27 [gpu_model_runner.py:2326] Graph capturing finished in 37 secs, took 1.06 GiB
+(RayWorkerWrapper pid=2160, ip=10.2.11.200) INFO 11-17 22:15:48 [monitor.py:34] torch.compile takes 30.11 s in total [repeated 3x across cluster]
+(RayWorkerWrapper pid=19026) INFO 11-17 22:15:50 [gpu_worker.py:232] Available KV cache memory: 17.70 GiB [repeated 3x across cluster]
+Capturing CUDA graph shapes: 100%|██████████| 67/67 [00:36<00:00,  1.83it/s]
+INFO 11-17 22:16:27 [core.py:172] init engine (profile, create kv cache, warmup model) took 81.74 seconds
+(raylet) [2025-11-17 22:16:33,097 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5394 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+INFO 11-17 22:16:41 [loggers.py:137] Engine 000: vllm cache_config_info with initialization after num_gpu_blocks is: 9060
+INFO 11-17 22:16:41 [api_server.py:1457] Starting vLLM API server 0 on http://0.0.0.0:2345
+INFO 11-17 22:16:41 [launcher.py:29] Available routes are:
+INFO 11-17 22:16:41 [launcher.py:37] Route: /openapi.json, Methods: HEAD, GET
+INFO 11-17 22:16:41 [launcher.py:37] Route: /docs, Methods: HEAD, GET
+INFO 11-17 22:16:41 [launcher.py:37] Route: /docs/oauth2-redirect, Methods: HEAD, GET
+INFO 11-17 22:16:41 [launcher.py:37] Route: /redoc, Methods: HEAD, GET
+INFO 11-17 22:16:41 [launcher.py:37] Route: /health, Methods: GET
+INFO 11-17 22:16:41 [launcher.py:37] Route: /load, Methods: GET
+INFO 11-17 22:16:41 [launcher.py:37] Route: /ping, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /ping, Methods: GET
+INFO 11-17 22:16:41 [launcher.py:37] Route: /tokenize, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /detokenize, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /v1/models, Methods: GET
+INFO 11-17 22:16:41 [launcher.py:37] Route: /version, Methods: GET
+INFO 11-17 22:16:41 [launcher.py:37] Route: /v1/chat/completions, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /v1/completions, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /v1/embeddings, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /pooling, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /classify, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /score, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /v1/score, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /v1/audio/transcriptions, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /v1/audio/translations, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /rerank, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /v1/rerank, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /v2/rerank, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /invocations, Methods: POST
+INFO 11-17 22:16:41 [launcher.py:37] Route: /metrics, Methods: GET
+INFO:     Started server process [18582]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+(raylet) [2025-11-17 22:16:43,112 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5394 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:16:53,126 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5388 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:17:03,142 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5388 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:17:13,157 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5387 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:17:23,172 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5387 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:17:33,187 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5387 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:17:43,201 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5387 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:17:53,215 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5384 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:18:03,227 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5384 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:18:13,243 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5383 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:18:23,257 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5383 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:18:33,273 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5383 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:18:43,286 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5383 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:18:53,302 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5377 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:19:03,317 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5377 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:19:13,333 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5376 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+ (raylet) [2025-11-17 22:19:23,346 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5376 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:19:33,361 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5376 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:19:43,377 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5376 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:19:53,394 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5372 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+(raylet) [2025-11-17 22:20:03,410 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5371 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+INFO:     127.0.0.1:43004 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43016 - "GET /v1/models HTTP/1.1" 200 OK
+(raylet) [2025-11-17 22:20:13,425 E 18286 18320] (raylet) file_system_monitor.cc:116: /tmp/ray/session_2025-11-17_22-10-09_120467_18090 is over 95% full, available space: 29.5371 GB; capacity: 915.815 GB. Object creation will fail if spilling is required. [repeated 2x across cluster]
+INFO 11-17 22:20:17 [logger.py:43] Received request cmpl-b44536921b044fb0af2bd3a14bc74311-0: prompt: 'The future of AI is', params: SamplingParams(n=1, presence_penalty=0.0, frequency_penalty=0.0, repetition_penalty=1.0, temperature=0.7, top_p=1.0, top_k=0, min_p=0.0, seed=None, stop=[], stop_token_ids=[], bad_words=[], include_stop_str_in_output=False, ignore_eos=False, max_tokens=10, min_tokens=0, logprobs=None, prompt_logprobs=None, skip_special_tokens=True, spaces_between_special_tokens=True, truncate_prompt_tokens=None, guided_decoding=None, extra_args=None), prompt_token_ids: [2, 133, 499, 9, 4687, 16], prompt_embeds shape: None, lora_request: None, prompt_adapter_request: None.
+INFO 11-17 22:20:17 [async_llm.py:270] Added request cmpl-b44536921b044fb0af2bd3a14bc74311-0.
+INFO 11-17 22:20:17 [ray_distributed_executor.py:569] RAY_CGRAPH_get_timeout is set to 300
+INFO 11-17 22:20:17 [ray_distributed_executor.py:571] VLLM_USE_RAY_COMPILED_DAG_CHANNEL_TYPE = auto
+INFO 11-17 22:20:17 [ray_distributed_executor.py:573] VLLM_USE_RAY_COMPILED_DAG_OVERLAP_COMM = False
+INFO:     127.0.0.1:38664 - "POST /v1/completions HTTP/1.1" 200 OK
