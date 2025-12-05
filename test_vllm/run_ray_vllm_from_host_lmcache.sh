@@ -5,7 +5,7 @@
 set -e
 
 # ============================================================
-# 关键：确保跨进程 hash 一致性（LMCache 分布式缓存必需）
+# 关键：确保跨进程 hash 一致性
 # 必须在所有进程中设置相同的值
 # ============================================================
 export PYTHONHASHSEED=0
@@ -403,6 +403,10 @@ docker exec -w / -e PYTHONHASHSEED=0 -e VLLM_CUSTOM_CMD="$VLLM_CUSTOM_CMD" -it $
     export LMCACHE_CONFIG_FILE=\"$LMCACHE_CONFIG_FILE_NIC0\"
     export LMCACHE_USE_EXPERIMENTAL=True
 
+    # GLOG 日志配置
+    export GLOG_logtostderr=1
+    export GLOG_v=1
+
     # Context Parallelism 需要 Ring FlashAttention
     if [ $CONTEXT_PARALLEL_SIZE -gt 1 ]; then
         export VLLM_ATTENTION_BACKEND=RING_FLASH_ATTN
@@ -423,18 +427,18 @@ docker exec -w / -e PYTHONHASHSEED=0 -e VLLM_CUSTOM_CMD="$VLLM_CUSTOM_CMD" -it $
         eval \"\$VLLM_CUSTOM_CMD\"
     else
         vllm serve $MODEL_DIR/$MODEL_NAME \\
-            --max-model-len 3200 \\
+            --max-model-len 32000 \\
             --enforce-eager \\
             --tensor-parallel-size $TENSOR_PARALLEL_SIZE \\
             --pipeline-parallel-size $PIPELINE_PARALLEL_SIZE \\
             --context-parallel-size $CONTEXT_PARALLEL_SIZE \\
             --distributed-executor-backend ray \\
             --no-enable-prefix-caching \\
-            --max-num-batched-tokens 1024 \\
+            --max-num-batched-tokens 4096 \\
             --gpu-memory-utilization 0.90 \\
-            --block-size 32 \\
+            --block-size 128 \\
             --port $SERVE_PORT \\
-            --kv-transfer-config '{\"kv_connector\":\"LMCacheConnectorV1\",\"kv_role\":\"kv_both\"}'
+            --kv-transfer-config '{\"kv_connector\":\"LMCacheConnectorV1\",\"kv_role\":\"kv_producer\",\"kv_connector_extra_config\":{\"use_native\":true}}'
     fi
 "
 

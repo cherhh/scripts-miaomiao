@@ -60,7 +60,7 @@ function create_docker_network() {
 }
 
 # Base image for the SR-IOV testbed containers
-IMAGE=cher03/testbed-sp:cuda12.8-torch2.9-dev1
+IMAGE=cher03/testbed-sp:cuda12.8-torch2.9-dev2
 # DIR_MAPPING collects all host<->container volume mappings
 DIR_MAPPING=" --volume /home/chenhao/:/usr/wkspace --volume /mnt/nfs/chenhao:/usr/data"
 SSH_PORT=22
@@ -85,7 +85,7 @@ function create_container() {
 	echo "container: $CONTAINER_NAME, IP: $IP"
 
     # Run container with keep-alive: --entrypoint sleep ... infinity
-    docker run -d --name=$CONTAINER_NAME $DIR_MAPPING --hostname=$HOST --network=$NET_NAME --ip=$IP --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=$GPU_ID --ulimit memlock=-1 --shm-size=65536m --cap-add=IPC_LOCK --cap-add=SYS_NICE --cap-add=NET_ADMIN --cap-add=SYS_PTRACE --device=/dev/infiniband $PLATFORM_OPT --entrypoint sleep $IMAGE infinity
+    docker run -d --name=$CONTAINER_NAME $DIR_MAPPING --hostname=$HOST --network=$NET_NAME --ip=$IP --gpus "\"device=$GPU_ID\"" --ulimit memlock=-1 --shm-size=65536m --cap-add=IPC_LOCK --cap-add=SYS_NICE --cap-add=NET_ADMIN --cap-add=SYS_PTRACE --device=/dev/infiniband $PLATFORM_OPT --entrypoint sleep $IMAGE infinity
     if ! docker inspect "$CONTAINER_NAME" >/dev/null 2>&1; then
         echo "container $CONTAINER_NAME failed to start" >&2
         return 1
